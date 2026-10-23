@@ -1,0 +1,10 @@
+{
+  "zone": "Residential",
+  "model": "XGBoost_Baseline",
+  "metrics": {
+    "MAE": 7.8568,
+    "RMSE": 12.371,
+    "MAPE": 7.1933,
+    "R2": 0.887
+  }
+}

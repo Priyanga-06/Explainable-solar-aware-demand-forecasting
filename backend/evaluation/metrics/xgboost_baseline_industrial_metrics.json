@@ -1,0 +1,10 @@
+{
+  "zone": "Industrial",
+  "model": "XGBoost_Baseline",
+  "metrics": {
+    "MAE": 10.5407,
+    "RMSE": 20.115,
+    "MAPE": 5.7502,
+    "R2": 0.8846
+  }
+}

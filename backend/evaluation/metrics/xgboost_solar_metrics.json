@@ -1,0 +1,9 @@
+{
+  "model": "XGBoost_Solar",
+  "metrics": {
+    "MAE": 2.1326,
+    "RMSE": 3.787,
+    "MAPE": 5.9271,
+    "R2": 0.9945
+  }
+}

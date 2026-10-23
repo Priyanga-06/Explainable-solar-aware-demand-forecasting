@@ -1,0 +1,18 @@
+# Render.com deployment config
+# Create a free Web Service at https://render.com
+# Connect your GitHub repo, and Render will use this file.
+
+services:
+  - type: web
+    name: solar-demand-api
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: API_PORT
+        value: 8000
+      - key: PYTHON_VERSION
+        value: 3.11.9
+    healthCheckPath: /health

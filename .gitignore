@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+.mypy_cache/
+.pytest_cache/
+
+# Environment
+.env
+
+# Trained model files — KEEP for deployment (needed by inference)
+# Regenerate with: python backend/training/train_all.py
+# backend/models/saved/     <- DO NOT ignore, needed for deployment
+# data/processed/           <- DO NOT ignore, needed for deployment
+# data/database/            <- DO NOT ignore, needed for deployment
+# data/raw/                 <- DO NOT ignore, needed for deployment
+
+# Logs
+logs/
+*.log
+
+# Reports
+reports/
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# VS Code
+.vscode/settings.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test scripts
+test_e2e.py

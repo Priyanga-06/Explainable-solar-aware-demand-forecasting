@@ -1,0 +1,10 @@
+{
+  "zone": "Commercial",
+  "model": "XGBoost_Baseline",
+  "metrics": {
+    "MAE": 5.9525,
+    "RMSE": 10.0046,
+    "MAPE": 14.8162,
+    "R2": 0.9539
+  }
+}

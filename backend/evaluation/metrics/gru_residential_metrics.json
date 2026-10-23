@@ -1,0 +1,10 @@
+{
+  "zone": "Residential",
+  "model": "GRU (XGBoost fallback \u2014 TensorFlow not available)",
+  "metrics": {
+    "MAE": 7.9556,
+    "RMSE": 12.4433,
+    "MAPE": 7.2667,
+    "R2": 0.8857
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "zone": "Industrial",
+  "model": "GRU (XGBoost fallback \u2014 TensorFlow not available)",
+  "metrics": {
+    "MAE": 10.6224,
+    "RMSE": 20.2064,
+    "MAPE": 5.7871,
+    "R2": 0.8836
+  }
+}

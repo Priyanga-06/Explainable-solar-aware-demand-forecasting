@@ -1,0 +1,56 @@
+.dashboard-page { display: flex; flex-direction: column; gap: 20px; }
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.kpi-card { min-height: 90px; }
+.kpi-card__header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.kpi-card__title { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.kpi-card__value { font-size: 28px; font-weight: 700; line-height: 1.1; }
+.kpi-card__unit  { font-size: 14px; font-weight: 500; color: var(--text-secondary); }
+.kpi-card__subtitle { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+.dashboard-charts {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-charts { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 800px) {
+  .dashboard-charts { grid-template-columns: 1fr; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.chart-card__header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+}
+.chart-card__title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+.zone-bars { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+.zone-bar-row { display: flex; align-items: center; gap: 10px; }
+.zone-bar-label { font-size: 12px; color: var(--text-secondary); width: 80px; flex-shrink: 0; }
+.zone-bar-track { flex: 1; height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; }
+.zone-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+.zone-bar-value { font-size: 12px; font-weight: 600; width: 70px; text-align: right; flex-shrink: 0; }
+
+.solar-match-display { display: flex; flex-direction: column; gap: 6px; }
+.solar-match-score { font-size: 48px; font-weight: 800; line-height: 1; }
+.solar-match-label { font-size: 14px; font-weight: 600; }
+.solar-match-desc { font-size: 12px; color: var(--text-secondary); }
+.solar-match-formula { font-size: 11px; }
+
+.dashboard-lower {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 800px) { .dashboard-lower { grid-template-columns: 1fr; } }
