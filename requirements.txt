@@ -1,29 +1,20 @@
-# ─── Core ─────────────────────────────────────────────────────────────────────
+# Core
 numpy==1.26.4
 pandas==2.2.2
 scikit-learn==1.5.1
 
-# ─── Deep Learning (GRU) — OPTIONAL ──────────────────────────────────────────
-# TensorFlow is optional. If not installed the system automatically uses an
-# XGBoost multi-step fallback for demand forecasting (similar accuracy on this dataset).
-# Uncomment the line below to enable the actual GRU model:
-# tensorflow==2.17.0
-
-# ─── Gradient Boosting (Solar, Demand Baseline, GRU Fallback) ────────────────
+# Models
 xgboost==2.1.1
-
-# ─── Explainability ───────────────────────────────────────────────────────────
 shap==0.45.1
 
-# ─── API ──────────────────────────────────────────────────────────────────────
+# Dashboard
+streamlit==1.39.0
+plotly==5.24.1
+
+# API (optional - only needed if running FastAPI separately)
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 pydantic==2.8.2
 
-# ─── Streamlit Dashboard (for Streamlit Cloud deployment) ───────────────────
-streamlit==1.39.0
-plotly==5.24.1
-
-# ─── Utilities ────────────────────────────────────────────────────────────────
+# Utilities
 python-dotenv==1.0.1
-joblib==1.4.2
