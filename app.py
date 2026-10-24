@@ -107,23 +107,30 @@ COLORS = {
     "simulated": "#bc8cff",
 }
 
+# Pre-extract frequently used colors to avoid f-string quoting issues on Python 3.11
+C_CARD   = COLORS["card"]
+C_BORDER = COLORS["border"]
+C_MUTED  = COLORS["muted"]
+C_TEXT   = COLORS["text"]
+C_DEMAND = COLORS["demand"]
+C_SOLAR  = COLORS["solar"]
+C_NET    = COLORS["net"]
+C_BG     = COLORS["bg"]
+C_CRIT   = COLORS["Critical"]
+
 
 # ─── Helper: metric card ────────────────────────────────────────────────────
 def metric_card(title, value, unit="", color="#58a6ff", subtitle=""):
     """Render a metric card using st.metric."""
-    if unit:
-        val_str = f"{value} {unit}"
-    else:
-        val_str = str(value)
-    col_color = color
+    val_str = f"{value} {unit}" if unit else str(value)
     st.markdown(
-        f"""<div style='background:{COLORS["card"]};border:1px solid {COLORS["border"]};
-        border-left:3px solid {col_color};border-radius:8px;padding:12px;margin-bottom:8px'>
-        <div style='font-size:0.7rem;color:{COLORS["muted"]};text-transform:uppercase;
-        letter-spacing:0.05em'>{title}</div>
-        <div style='font-size:1.5rem;font-weight:700;color:{col_color}'>{val_str}</div>
-        <div style='font-size:0.7rem;color:{COLORS["muted"]};margin-top:2px'>{subtitle}</div>
-        </div>""",
+        f"<div style='background:{C_CARD};border:1px solid {C_BORDER};"
+        f"border-left:3px solid {color};border-radius:8px;padding:12px;margin-bottom:8px'>"
+        f"<div style='font-size:0.7rem;color:{C_MUTED};text-transform:uppercase;"
+        f"letter-spacing:0.05em'>{title}</div>"
+        f"<div style='font-size:1.5rem;font-weight:700;color:{color}'>{val_str}</div>"
+        f"<div style='font-size:0.7rem;color:{C_MUTED};margin-top:2px'>{subtitle}</div>"
+        f"</div>",
         unsafe_allow_html=True,
     )
 
@@ -131,12 +138,12 @@ def metric_card(title, value, unit="", color="#58a6ff", subtitle=""):
 def chart_config():
     """Common Plotly layout config for dark theme."""
     return dict(
-        paper_bgcolor=COLORS["bg"],
-        plot_bgcolor=COLORS["card"],
-        font=dict(color=COLORS["text"], size=11),
+        paper_bgcolor=C_BG,
+        plot_bgcolor=C_CARD,
+        font=dict(color=C_TEXT, size=11),
         margin=dict(l=40, r=20, t=30, b=20),
-        xaxis=dict(gridcolor=COLORS["border"], showgrid=True),
-        yaxis=dict(gridcolor=COLORS["border"], showgrid=True),
+        xaxis=dict(gridcolor=C_BORDER, showgrid=True),
+        yaxis=dict(gridcolor=C_BORDER, showgrid=True),
         legend=dict(bgcolor="rgba(0,0,0,0)"),
     )
 
@@ -147,7 +154,6 @@ with st.sidebar:
     st.caption("Solar-Aware Decision Support System")
     st.divider()
 
-    # Data source notice
     st.markdown("**Data Source:**")
     st.markdown(
         "<span style='font-size:0.75rem;color:#8b949e'>Synthetic/Demo data — "
@@ -156,21 +162,19 @@ with st.sidebar:
     )
     st.divider()
 
-    # Severity thresholds
     st.markdown("**Severity Thresholds (config/settings.py):**")
     from config.settings import SEVERITY_THRESHOLDS
     for level, (low, high) in SEVERITY_THRESHOLDS.items():
         c = COLORS.get(level, "#8b949e")
-        hi = f"{high} MW" if high < 99999 else "∞"
+        hi_str = (f"{high} MW") if high < 99999 else "∞"
         st.markdown(
             f"<span style='color:{c};font-weight:600'>● {level}</span> "
-            f"<span style='font-size:0.75rem;color:{COLORS["muted"]}'>{low}–{hi}</span>",
+            f"<span style='font-size:0.75rem;color:{C_MUTED}'>{low}–{hi_str}</span>",
             unsafe_allow_html=True,
         )
 
     st.divider()
 
-    # Refresh
     if st.button("🔄 Refresh Data", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
@@ -198,6 +202,7 @@ peak_cause = data.get("peak_cause_explanation", {})
 severity_level = peak_sev.get("severity", {}).get("level", "Normal")
 sev_color = COLORS.get(severity_level, "#8b949e")
 
+hours = [t.split(" ")[1] if " " in t else t for t in ts_list]
 
 # ─── Navigation tabs ────────────────────────────────────────────────────────
 tab_names = [
@@ -212,16 +217,15 @@ tabs = st.tabs(tab_names)
 # TAB 1: DASHBOARD
 # ═══════════════════════════════════════════════════════════════════════════
 with tabs[0]:
-    st.markdown(f"## Officer Dashboard")
+    st.markdown("## Officer Dashboard")
     st.markdown(
-        f"<span style='font-size:0.8rem;color:{COLORS["muted"]}'>"
-        f"Zone-wise demand forecasting & grid health monitoring — "
+        f"<span style='font-size:0.8rem;color:{C_MUTED}'>"
+        f"Zone-wise demand forecasting &amp; grid health monitoring — "
         f"Severity: </span>"
         f"<span style='color:{sev_color};font-weight:700'>{severity_level}</span>",
         unsafe_allow_html=True,
     )
 
-    # KPI Row
     k1, k2, k3, k4 = st.columns(4)
     with k1:
         metric_card("Current Load", kpi.get("current_load_mw", 0), "MW", "#58a6ff", "Total across all zones")
@@ -229,7 +233,7 @@ with tabs[0]:
         metric_card("Next-Hour Demand", kpi.get("next_hour_demand_mw", 0), "MW", "#39c5cf", "Forecast — next hour")
     with k3:
         metric_card("24-Hour Peak", kpi.get("peak_24h_mw", 0), "MW", sev_color,
-                     f"Expected at {peak_sev.get('peak_timestamp', '—')}")
+                    "Expected at " + str(peak_sev.get("peak_timestamp", "—")))
     with k4:
         metric_card("Net Grid Demand", kpi.get("net_grid_demand_mw", 0), "MW", "#db6d28", "After solar offset")
 
@@ -238,21 +242,18 @@ with tabs[0]:
         metric_card("Solar Generation", kpi.get("solar_generation_mw", 0), "MW", "#d29922", "Current forecast")
     with k6:
         metric_card("Demand Status", severity_level, "", sev_color,
-                     peak_sev.get("severity", {}).get("description", "")[:45])
+                    peak_sev.get("severity", {}).get("description", "")[:45])
     with k7:
         match_pct = solar_match.get("match_pct", 0)
         match_color = "#3fb950" if match_pct >= 50 else "#d29922"
-        metric_card("Solar-Load Match", f"{match_pct}%", "", match_color, solar_match.get("label", ""))
+        metric_card("Solar-Load Match", str(match_pct) + "%", "", match_color, solar_match.get("label", ""))
     with k8:
         metric_card("Anomalies", len(anomalies), "", "#f85149" if anomalies else "#3fb950",
-                     "Detected in recent window")
+                    "Detected in recent window")
 
     st.divider()
-
-    # 24-hour forecast chart
     st.markdown("### 24-Hour Demand & Solar Forecast")
 
-    hours = [t.split(" ")[1] if " " in t else t for t in ts_list]
     chart_df = pd.DataFrame({
         "Hour": hours,
         "Total Demand (MW)": total_demand,
@@ -263,59 +264,48 @@ with tabs[0]:
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=chart_df["Hour"], y=chart_df["Total Demand (MW)"],
                              fill="tozeroy", name="Total Demand",
-                             line=dict(color=COLORS["demand"]), mode="lines"))
+                             line=dict(color=C_DEMAND), mode="lines"))
     fig.add_trace(go.Scatter(x=chart_df["Hour"], y=chart_df["Solar Generation (MW)"],
                              fill="tozeroy", name="Solar",
-                             line=dict(color=COLORS["solar"]), mode="lines"))
+                             line=dict(color=C_SOLAR), mode="lines"))
     fig.add_trace(go.Scatter(x=chart_df["Hour"], y=chart_df["Net Grid Demand (MW)"],
                              fill="tozeroy", name="Net Grid Demand",
-                             line=dict(color=COLORS["net"]), mode="lines"))
+                             line=dict(color=C_NET), mode="lines"))
 
-    # Peak marker
+    # Peak marker — use shape+annotation for full Plotly version compatibility
     peak_idx = peak_sev.get("peak_hour_index")
     if peak_idx is not None and peak_idx < len(hours):
-        try:
-            fig.add_vline(
-                x=hours[peak_idx],
-                line_dash="dash",
-                line_color=COLORS["Critical"],
-                annotation=dict(
-                    text="PEAK",
-                    font=dict(color=COLORS["Critical"]),
-                ),
-            )
-        except Exception:
-            # Fallback: add shape + annotation separately (compatible with all Plotly 5.x)
-            fig.add_shape(
-                type="line",
-                x0=hours[peak_idx], x1=hours[peak_idx],
-                y0=0, y1=1,
-                xref="x", yref="paper",
-                line=dict(color=COLORS["Critical"], dash="dash", width=1),
-            )
-            fig.add_annotation(
-                x=hours[peak_idx], y=1,
-                xref="x", yref="paper",
-                text="PEAK",
-                font=dict(color=COLORS["Critical"]),
-                showarrow=False,
-            )
+        fig.add_shape(
+            type="line",
+            x0=hours[peak_idx], x1=hours[peak_idx],
+            y0=0, y1=1,
+            xref="x", yref="paper",
+            line=dict(color=C_CRIT, dash="dash", width=1),
+        )
+        fig.add_annotation(
+            x=hours[peak_idx], y=1,
+            xref="x", yref="paper",
+            text="PEAK",
+            font=dict(color=C_CRIT),
+            showarrow=False,
+        )
 
     fig.update_layout(**chart_config(), height=300)
     st.plotly_chart(fig, use_container_width=True)
 
-    # Zone peaks + forecast confidence side by side
     col_a, col_b = st.columns(2)
 
     with col_a:
         st.markdown("### Zone-wise Peak Demand")
         zone_data = []
         for zone, fc in zone_fc.items():
-            zone_data.append({"Zone": zone, "Peak (MW)": fc.get("peak_mw", 0),
-                              "Peak Hour": f"H+{fc.get('peak_hour_offset', '—')}"})
+            zone_data.append({
+                "Zone": zone,
+                "Peak (MW)": fc.get("peak_mw", 0),
+                "Peak Hour": "H+" + str(fc.get("peak_hour_offset", "—")),
+            })
         zone_df = pd.DataFrame(zone_data)
-        fig2 = px.bar(zone_df, x="Zone", y="Peak (MW)",
-                      color="Zone",
+        fig2 = px.bar(zone_df, x="Zone", y="Peak (MW)", color="Zone",
                       color_discrete_map=COLORS)
         fig2.update_layout(**chart_config(), height=250, showlegend=False)
         st.plotly_chart(fig2, use_container_width=True)
@@ -326,30 +316,32 @@ with tabs[0]:
         exp_peak = fc_conf.get("expected_peak_mw", 0)
         lo = fc_conf.get("estimated_lower_mw", 0)
         hi = fc_conf.get("estimated_upper_mw", 0)
+        note_txt = fc_conf.get("note", "Estimated range ±7.5%")
         st.markdown(
-            f"<div style='background:{COLORS["card"]};border:1px solid {COLORS["border"]};"
+            f"<div style='background:{C_CARD};border:1px solid {C_BORDER};"
             f"border-radius:8px;padding:16px'>"
-            f"<div style='font-size:0.7rem;color:{COLORS["muted"]}'>EXPECTED PEAK</div>"
-            f"<div style='font-size:2rem;font-weight:700;color:{COLORS["demand"]}'>{exp_peak} MW</div>"
-            f"<div style='font-size:0.7rem;color:{COLORS["muted"]};margin-top:8px'>ESTIMATED RANGE</div>"
+            f"<div style='font-size:0.7rem;color:{C_MUTED}'>EXPECTED PEAK</div>"
+            f"<div style='font-size:2rem;font-weight:700;color:{C_DEMAND}'>{exp_peak} MW</div>"
+            f"<div style='font-size:0.7rem;color:{C_MUTED};margin-top:8px'>ESTIMATED RANGE</div>"
             f"<div style='font-size:1.2rem;font-weight:600'>{lo} – {hi} MW</div>"
-            f"<div style='font-size:0.7rem;color:{COLORS["muted"]};margin-top:6px'>"
-            f"ⓘ {fc_conf.get('note', 'Estimated range ±7.5%')}</div>"
+            f"<div style='font-size:0.7rem;color:{C_MUTED};margin-top:6px'>"
+            f"ⓘ {note_txt}</div>"
             f"</div>",
             unsafe_allow_html=True,
         )
 
-        st.markdown(f"### Peak Severity")
+        st.markdown("### Peak Severity")
+        peak_net = peak_sev.get("peak_net_demand_mw", 0)
+        peak_ts = peak_sev.get("peak_timestamp", "—")
+        sev_desc = peak_sev.get("severity", {}).get("description", "")
+        sev_range = peak_sev.get("severity", {}).get("threshold_range", "")
         st.markdown(
-            f"<div style='background:{COLORS["card"]};border:1px solid {COLORS["border"]};"
+            f"<div style='background:{C_CARD};border:1px solid {C_BORDER};"
             f"border-left:3px solid {sev_color};border-radius:8px;padding:16px'>"
             f"<div style='font-size:2rem;font-weight:700;color:{sev_color}'>{severity_level}</div>"
-            f"<div style='font-size:0.8rem;color:{COLORS["muted"]}'>"
-            f"{peak_sev.get('peak_net_demand_mw', 0)} MW at {peak_sev.get('peak_timestamp', '—')}</div>"
-            f"<div style='font-size:0.75rem;color:#8b949e;margin-top:6px'>"
-            f"{peak_sev.get('severity', {}).get('description', '')}</div>"
-            f"<div style='font-size:0.7rem;color:{COLORS["muted"]};margin-top:4px'>"
-            f"Threshold: {peak_sev.get('severity', {}).get('threshold_range', '')}</div>"
+            f"<div style='font-size:0.8rem;color:{C_MUTED}'>{peak_net} MW at {peak_ts}</div>"
+            f"<div style='font-size:0.75rem;color:#8b949e;margin-top:6px'>{sev_desc}</div>"
+            f"<div style='font-size:0.7rem;color:{C_MUTED};margin-top:4px'>Threshold: {sev_range}</div>"
             f"</div>",
             unsafe_allow_html=True,
         )
@@ -371,14 +363,15 @@ with tabs[1]:
         upper = fc.get("confidence_upper_mw", [])
 
         col1, col2, col3 = st.columns(3)
+        zc = COLORS.get(selected_zone, "#58a6ff")
         with col1:
-            metric_card("Peak Demand", fc.get("peak_mw", 0), "MW", COLORS[selected_zone], f"At H+{fc.get('peak_hour_offset', '—')}")
+            metric_card("Peak Demand", fc.get("peak_mw", 0), "MW", zc,
+                        "At H+" + str(fc.get("peak_hour_offset", "—")))
         with col2:
             metric_card("Model Used", fc.get("model_used", "XGBoost_Fallback"), "", "#8b949e", "Demand forecaster")
         with col3:
             metric_card("Forecast Points", len(preds), "hours", "#8b949e", "24-hour horizon")
 
-        # Chart with confidence band
         zone_chart_df = pd.DataFrame({
             "Hour": hours[:len(preds)],
             "Demand (MW)": preds,
@@ -387,7 +380,6 @@ with tabs[1]:
         })
 
         fig3 = go.Figure()
-        zc = COLORS[selected_zone]
         fig3.add_trace(go.Scatter(
             x=zone_chart_df["Hour"], y=zone_chart_df["Upper Estimate"],
             fill=None, mode="lines", line=dict(width=0),
@@ -396,12 +388,12 @@ with tabs[1]:
         fig3.add_trace(go.Scatter(
             x=zone_chart_df["Hour"], y=zone_chart_df["Lower Estimate"],
             fill="tonexty", mode="lines", line=dict(width=0),
-            fillcolor=f"rgba({88 if zc=='#58a6ff' else 57},{166 if zc=='#58a6ff' else 197},{255 if zc=='#58a6ff' else 207},0.1)",
+            fillcolor="rgba(88,166,255,0.1)",
             name="Estimated Range", hoverinfo="skip"
         ))
         fig3.add_trace(go.Scatter(
             x=zone_chart_df["Hour"], y=zone_chart_df["Demand (MW)"],
-            mode="lines", name=f"{selected_zone} Demand",
+            mode="lines", name=selected_zone + " Demand",
             line=dict(color=zc, width=2)
         ))
         fig3.update_layout(**chart_config(), height=350)
@@ -422,15 +414,15 @@ with tabs[2]:
     with s1:
         metric_card("Peak Solar", f"{peak_solar:.0f}", "MW", "#d29922", "24h forecast peak")
     with s2:
-        metric_card("Solar-Load Match", f"{solar_match.get('match_pct', 0)}%", "",
-                     "#3fb950" if solar_match.get("match_pct", 0) >= 50 else "#d29922",
-                     solar_match.get("label", ""))
+        sm_pct = solar_match.get("match_pct", 0)
+        metric_card("Solar-Load Match", str(sm_pct) + "%", "",
+                    "#3fb950" if sm_pct >= 50 else "#d29922",
+                    solar_match.get("label", ""))
     with s3:
         metric_card("Daytime Solar Total", f"{solar_match.get('daytime_solar_mw', 0):.0f}", "MW·h", "#39c5cf", "6AM–6PM")
     with s4:
         metric_card("Daytime Demand", f"{solar_match.get('daytime_demand_mw', 0):.0f}", "MW·h", "#58a6ff", "6AM–6PM")
 
-    # Solar + demand + net chart
     solar_chart = pd.DataFrame({
         "Hour": hours,
         "Demand (MW)": total_demand,
@@ -439,20 +431,18 @@ with tabs[2]:
     })
     fig4 = go.Figure()
     fig4.add_trace(go.Scatter(x=solar_chart["Hour"], y=solar_chart["Demand (MW)"],
-                              fill="tozeroy", name="Demand",
-                              line=dict(color=COLORS["demand"])))
+                              fill="tozeroy", name="Demand", line=dict(color=C_DEMAND)))
     fig4.add_trace(go.Scatter(x=solar_chart["Hour"], y=solar_chart["Solar (MW)"],
-                              fill="tozeroy", name="Solar",
-                              line=dict(color=COLORS["solar"])))
+                              fill="tozeroy", name="Solar", line=dict(color=C_SOLAR)))
     fig4.add_trace(go.Scatter(x=solar_chart["Hour"], y=solar_chart["Net Demand (MW)"],
-                              fill="tozeroy", name="Net Demand",
-                              line=dict(color=COLORS["net"])))
+                              fill="tozeroy", name="Net Demand", line=dict(color=C_NET)))
     fig4.update_layout(**chart_config(), height=350)
     st.plotly_chart(fig4, use_container_width=True)
 
-    st.markdown(f"### Solar-Load Matching Formula")
-    st.info(f"{solar_match.get('description', '')}\n\n"
-            f"**Formula:** {solar_match.get('formula', 'Solar-Load Match % = (Total Daytime Solar / Total Daytime Demand) × 100')}")
+    sm_desc = solar_match.get("description", "")
+    sm_formula = solar_match.get("formula", "Solar-Load Match % = (Total Daytime Solar / Total Daytime Demand) x 100")
+    st.markdown("### Solar-Load Matching Formula")
+    st.info(sm_desc + "\n\n**Formula:** " + sm_formula)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -463,7 +453,7 @@ with tabs[3]:
     st.caption("Unusual consumption patterns detected by Isolation Forest")
 
     zone_filter = st.selectbox("Filter by Zone", ["All", "Residential", "Commercial", "Industrial"],
-                                key="anomaly_filter")
+                               key="anomaly_filter")
     filtered = anomalies if zone_filter == "All" else [a for a in anomalies if a.get("zone") == zone_filter]
 
     if filtered:
@@ -490,11 +480,10 @@ with tabs[4]:
     st.caption("SHAP explainability, peak cause analysis, feature importance")
 
     shap_zone = st.selectbox("Select Zone for SHAP", ["Residential", "Commercial", "Industrial"],
-                              key="shap_zone")
+                             key="shap_zone")
     zone_exp = shap_exp.get(shap_zone, {})
     top_factors = zone_exp.get("top_factors", [])
 
-    # Peak cause explanation
     if peak_cause.get("peak_cause_explanation"):
         st.markdown("### Peak Cause Explanation")
         st.info(peak_cause["peak_cause_explanation"])
@@ -504,19 +493,20 @@ with tabs[4]:
     with col_l:
         st.markdown("### Top Influencing Factors")
         if top_factors:
-            for f in top_factors:
-                direction = f.get("direction", "neutral")
-                impact = f.get("impact", "Low")
-                color = "#f85149" if direction == "positive" else "#3fb950"
-                bar_pct = min(abs(f.get("shap_value", 0)) / 20 * 100, 100)
+            for fac in top_factors:
+                direction = fac.get("direction", "neutral")
+                impact = fac.get("impact", "Low")
+                fcolor = "#f85149" if direction == "positive" else "#3fb950"
+                bar_pct = min(abs(fac.get("shap_value", 0)) / 20 * 100, 100)
+                arrow = "▲" if direction == "positive" else "▼"
                 st.markdown(
-                    f"**{f['feature']}**  "
-                    f"<span style='color:{color};font-size:0.75rem'>"
-                    f"{'▲' if direction == 'positive' else '▼'} {impact} impact</span>",
+                    f"**{fac['feature']}**  "
+                    f"<span style='color:{fcolor};font-size:0.75rem'>"
+                    f"{arrow} {impact} impact</span>",
                     unsafe_allow_html=True,
                 )
                 st.progress(int(bar_pct) / 100)
-                st.caption(f.get("plain_explanation", ""))
+                st.caption(fac.get("plain_explanation", ""))
         else:
             st.write("No SHAP data available.")
 
@@ -524,9 +514,10 @@ with tabs[4]:
         st.markdown("### Feature Importance (|SHAP|)")
         if top_factors:
             imp_df = pd.DataFrame([
-                {"Feature": f["feature"], "|SHAP|": abs(f["shap_value"]),
-                 "Direction": f["direction"]}
-            for f in top_factors])
+                {"Feature": fac["feature"], "|SHAP|": abs(fac["shap_value"]),
+                 "Direction": fac["direction"]}
+                for fac in top_factors
+            ])
             fig5 = px.bar(imp_df, x="|SHAP|", y="Feature", orientation="h",
                           color="Direction",
                           color_discrete_map={"positive": "#f85149", "negative": "#3fb950"})
@@ -534,7 +525,7 @@ with tabs[4]:
             st.plotly_chart(fig5, use_container_width=True)
 
     if zone_exp.get("technical_note"):
-        st.caption(f"ⓘ {zone_exp['technical_note']}")
+        st.caption("ⓘ " + zone_exp["technical_note"])
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -542,7 +533,7 @@ with tabs[4]:
 # ═══════════════════════════════════════════════════════════════════════════
 with tabs[5]:
     st.markdown("## Recommendations")
-    st.caption(f"Rule-based adaptive recommendations — {len(recommendations)} active")
+    st.caption("Rule-based adaptive recommendations — " + str(len(recommendations)) + " active")
 
     for rec in recommendations:
         cat = rec.get("category", "General")
@@ -552,17 +543,19 @@ with tabs[5]:
             "Monitoring": "#39c5cf", "Maintenance": "#3fb950",
             "Anomaly Response": "#f85149",
         }
-        c = color_map.get(cat, "#58a6ff")
+        rc = color_map.get(cat, "#58a6ff")
+        priority = rec.get("priority", "?")
+        action = rec.get("action", "")
+        reason = rec.get("reason", "")
         st.markdown(
-            f"<div style='background:{COLORS["card"]};border:1px solid {COLORS["border"]};"
-            f"border-left:3px solid {c};border-radius:8px;padding:14px;margin-bottom:10px'>"
-            f"<span style='font-size:0.65rem;color:{COLORS["muted"]};text-transform:uppercase;font-weight:700'>"
-            f"Priority {rec.get('priority', '?')}</span> "
-            f"<span style='background:{c}22;color:{c};padding:2px 8px;border-radius:10px;"
+            f"<div style='background:{C_CARD};border:1px solid {C_BORDER};"
+            f"border-left:3px solid {rc};border-radius:8px;padding:14px;margin-bottom:10px'>"
+            f"<span style='font-size:0.65rem;color:{C_MUTED};text-transform:uppercase;font-weight:700'>"
+            f"Priority {priority}</span> "
+            f"<span style='background:{rc}22;color:{rc};padding:2px 8px;border-radius:10px;"
             f"font-size:0.7rem;font-weight:600'>{cat}</span><br>"
-            f"<span style='font-size:0.95rem;font-weight:600;color:{COLORS["text"]}'>"
-            f"{rec.get('action', '')}</span><br>"
-            f"<span style='font-size:0.8rem;color:#8b949e'><strong>Why:</strong> {rec.get('reason', '')}</span>"
+            f"<span style='font-size:0.95rem;font-weight:600;color:{C_TEXT}'>{action}</span><br>"
+            f"<span style='font-size:0.8rem;color:#8b949e'><strong>Why:</strong> {reason}</span>"
             f"</div>",
             unsafe_allow_html=True,
         )
@@ -586,7 +579,6 @@ with tabs[6]:
 
     st.info(metrics_data.get("data_source_note", "All metrics from actual model evaluation on the test set."))
 
-    # MAE chart
     if not comp_df.empty and "MAE (MW)" in comp_df.columns:
         mae_df = comp_df.dropna(subset=["MAE (MW)"])
         if not mae_df.empty:
@@ -596,7 +588,6 @@ with tabs[6]:
             fig6.update_layout(**chart_config(), height=250)
             st.plotly_chart(fig6, use_container_width=True)
 
-    # Solar model metrics
     solar_m = metrics_data.get("solar_model", {}).get("metrics", {})
     if solar_m and "MAE" in solar_m:
         st.markdown("### Solar Model — XGBoost")
@@ -606,7 +597,6 @@ with tabs[6]:
         with sm3: metric_card("MAPE", solar_m.get("MAPE"), "%", "#d29922")
         with sm4: metric_card("R²", solar_m.get("R2"), "", "#d29922")
 
-    # Metric definitions
     st.markdown("### Metric Definitions")
     for k, v in metrics_data.get("metric_definitions", {}).items():
         st.markdown(f"**{k}**: {v}")
@@ -644,12 +634,11 @@ with tabs[7]:
                 max_value=float(limits["max"]),
                 value=float(limits["default"]),
                 step=1.0,
-                key=f"slider_{key}",
+                key="slider_" + key,
             )
 
         run_btn = st.button("▶ RUN SIMULATION", type="primary", use_container_width=True)
 
-    # Run simulation
     if run_btn or "sim_result" in st.session_state:
         if run_btn:
             from backend.simulation.what_if_simulator import run_simulation
@@ -674,31 +663,28 @@ with tabs[7]:
         with col_res:
             st.markdown("### Simulation Results")
             st.markdown(
-                f"<span style='background:#58a6ff22;color:#58a6ff;padding:2px 8px;"
-                f"border-radius:10px;font-size:0.7rem;font-weight:600'>"
-                f"BASELINE FORECAST</span> "
-                f"<span style='background:#bc8cff22;color:#bc8cff;padding:2px 8px;"
-                f"border-radius:10px;font-size:0.7rem;font-weight:600'>"
-                f"SIMULATED WHAT-IF SCENARIO</span>",
+                "<span style='background:#58a6ff22;color:#58a6ff;padding:2px 8px;"
+                "border-radius:10px;font-size:0.7rem;font-weight:600'>"
+                "BASELINE FORECAST</span> "
+                "<span style='background:#bc8cff22;color:#bc8cff;padding:2px 8px;"
+                "border-radius:10px;font-size:0.7rem;font-weight:600'>"
+                "SIMULATED WHAT-IF SCENARIO</span>",
                 unsafe_allow_html=True,
             )
 
-            # Comparison table
             b = sim_result["baseline"]
             s = sim_result["simulated"]
             imp = sim_result["impact"]
 
             comp_data = {
-                "Metric": ["Peak Demand (MW)", "Solar (MW)", "Net Demand (MW)",
-                          "Peak Time", "Severity"],
+                "Metric": ["Peak Demand (MW)", "Solar (MW)", "Net Demand (MW)", "Peak Time", "Severity"],
                 "Baseline": [b["peak_demand_mw"], b["peak_solar_mw"],
-                            b["peak_net_demand_mw"], b["peak_timestamp"], b["severity"]],
+                             b["peak_net_demand_mw"], b["peak_timestamp"], b["severity"]],
                 "Simulated": [s["peak_demand_mw"], s["peak_solar_mw"],
-                             s["peak_net_demand_mw"], s["peak_timestamp"], s["severity"]],
+                              s["peak_net_demand_mw"], s["peak_timestamp"], s["severity"]],
             }
             st.dataframe(pd.DataFrame(comp_data), use_container_width=True, hide_index=True)
 
-            # Impact
             i1, i2, i3 = st.columns(3)
             with i1:
                 metric_card("Peak Reduction", imp["peak_reduction_mw"], "MW", "#3fb950")
@@ -707,19 +693,20 @@ with tabs[7]:
             with i3:
                 metric_card("Severity Change", imp["severity_improvement"], "", "#bc8cff")
 
-            st.info(f"**Recommended:** {imp['recommended_scenario']}")
+            st.info("**Recommended:** " + imp["recommended_scenario"])
 
-            # Before/after chart
             sim_hours = [t.split(" ")[1] if " " in t else t for t in ts_list]
+            baseline_net = b.get("net_24h", [])
+            sim_net = s.get("net_24h", [])
             sim_chart = pd.DataFrame({
-                "Hour": sim_hours[:len(b["net_24h"])] if b.get("net_24h") else sim_hours,
-                "Baseline Net": b.get("net_24h", []),
-                "Simulated Net": s.get("net_24h", []),
+                "Hour": sim_hours[:len(baseline_net)] if baseline_net else sim_hours,
+                "Baseline Net": baseline_net,
+                "Simulated Net": sim_net,
             })
             fig7 = go.Figure()
             fig7.add_trace(go.Scatter(
                 x=sim_chart["Hour"], y=sim_chart["Baseline Net"],
-                name="Baseline Forecast", line=dict(color=COLORS["demand"], width=2)
+                name="Baseline Forecast", line=dict(color=C_DEMAND, width=2)
             ))
             fig7.add_trace(go.Scatter(
                 x=sim_chart["Hour"], y=sim_chart["Simulated Net"],
@@ -727,8 +714,7 @@ with tabs[7]:
             ))
             fig7.update_layout(**chart_config(), height=300)
             st.plotly_chart(fig7, use_container_width=True)
-
-            st.caption(f"⚠ {sim_result.get('disclaimer', '')}")
+            st.caption("⚠ " + sim_result.get("disclaimer", ""))
     else:
         with col_res:
             st.info("Adjust parameters and click **RUN SIMULATION** to see results.")
@@ -803,14 +789,14 @@ with tabs[8]:
             st.success("Report generated!")
 
     if "report" in st.session_state:
+        import json
+        from datetime import datetime
         report = st.session_state["report"]
         st.json(report)
-
-        # Download button
         report_json = json.dumps(report, indent=2, default=str)
         st.download_button(
             label="📄 Download Report (JSON)",
             data=report_json,
-            file_name=f"power-grid-report-{datetime.now().strftime('%Y-%m-%d')}.json",
+            file_name="power-grid-report-" + datetime.now().strftime("%Y-%m-%d") + ".json",
             mime="application/json",
         )
