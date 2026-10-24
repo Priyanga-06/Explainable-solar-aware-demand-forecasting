@@ -1,3 +1,7 @@
+# ── PowerAI — verified compatible with Python 3.12 (cp312 wheels on PyPI) ──
+# Set Python 3.12 in Streamlit Cloud: App Settings → Advanced settings → Python version
+# runtime.txt is NOT respected by Streamlit Cloud — use the UI dropdown instead.
+
 numpy==2.0.2
 pandas==2.2.2
 scikit-learn==1.5.1
