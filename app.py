@@ -62,22 +62,39 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# ─── Safe numeric conversion ────────────────────────────────────────────────
+def _safe(v, decimals=2):
+    """Convert numpy scalars to plain Python floats/ints for display."""
+    try:
+        return round(float(v), decimals)
+    except Exception:
+        return v
+
+
 # ─── Cached inference ──────────────────────────────────────────────────────
 @st.cache_data(ttl=600, show_spinner="Running inference pipeline...")
 def get_dashboard_data():
     """Load processed data and run full inference."""
+    import warnings
+    warnings.filterwarnings("ignore")
     from config.settings import PROCESSED_DATA_DIR
     from backend.forecasting.inference import run_full_inference
 
     data_path = PROCESSED_DATA_DIR / "full_processed.csv"
     if not data_path.exists():
-        st.error("Processed data not found. Training is needed first.")
+        st.error("Processed data not found. Run: python backend/training/train_all.py")
         st.stop()
 
     df = pd.read_csv(data_path, parse_dates=["timestamp"])
     df.sort_values(["zone", "timestamp"], inplace=True)
     recent = df.groupby("zone").tail(500).reset_index(drop=True)
     payload = run_full_inference(recent)
+
+    # Normalise KPI values to plain Python floats (numpy scalars break st.metric)
+    kpi = payload.get("kpi", {})
+    payload["kpi"] = {k: _safe(v) if isinstance(v, (int, float)) or
+                      hasattr(v, '__float__') else v
+                      for k, v in kpi.items()}
     return payload
 
 
