@@ -865,15 +865,185 @@ with tabs[7]:
 # ═══════════════════════════════════════════════════════════════════════════
 # TAB 9 — REPORTS
 # ═══════════════════════════════════════════════════════════════════════════
+def build_pdf(rpt: dict) -> bytes:
+    """Generate a styled PDF from the report dict. Returns bytes."""
+    from fpdf import FPDF
+
+    # ── colours (RGB) ──
+    BG_R, BG_G, BG_B         = 2,  13, 26
+    CARD_R, CARD_G, CARD_B   = 3,  23, 42
+    BLUE_R, BLUE_G, BLUE_B   = 22, 139,255
+    TEXT_R, TEXT_G, TEXT_B   = 245,247,250
+    MUT_R,  MUT_G,  MUT_B    = 106,139,168
+    LINE_R, LINE_G, LINE_B   = 23, 96, 138
+
+    class PDF(FPDF):
+        def header(self):
+            self.set_fill_color(BG_R, BG_G, BG_B)
+            self.rect(0, 0, 210, 297, "F")            # full dark background
+            self.set_fill_color(CARD_R, CARD_G, CARD_B)
+            self.rect(0, 0, 210, 20, "F")             # header band
+            self.set_draw_color(LINE_R, LINE_G, LINE_B)
+            self.set_line_width(0.6)
+            self.line(0, 20, 210, 20)
+            self.set_font("Helvetica", "B", 13)
+            self.set_text_color(BLUE_R, BLUE_G, BLUE_B)
+            self.set_xy(10, 5)
+            self.cell(0, 10, "⚡ POWERAI — Solar-Aware Decision Support System", ln=False)
+            self.set_font("Helvetica", "", 9)
+            self.set_text_color(MUT_R, MUT_G, MUT_B)
+            self.set_xy(10, 13)
+            ts = rpt.get("generated_at","")[:19].replace("T", "  ")
+            self.cell(0, 5, f"Generated: {ts}  |  Synthetic/demo data — NOT real operational data")
+            self.ln(8)
+
+        def footer(self):
+            self.set_y(-12)
+            self.set_font("Helvetica", "", 8)
+            self.set_text_color(MUT_R, MUT_G, MUT_B)
+            self.cell(0, 8, f"PowerAI Academic Project  |  Page {self.page_no()}", align="C")
+
+    def section_title(pdf, title):
+        pdf.set_fill_color(CARD_R, CARD_G, CARD_B)
+        pdf.set_draw_color(LINE_R, LINE_G, LINE_B)
+        pdf.set_line_width(0.4)
+        pdf.set_font("Helvetica", "B", 11)
+        pdf.set_text_color(BLUE_R, BLUE_G, BLUE_B)
+        pdf.set_fill_color(CARD_R, CARD_G, CARD_B)
+        pdf.cell(0, 8, title, ln=True, fill=True, border="B")
+        pdf.ln(2)
+
+    def row(pdf, label, value, indent=6):
+        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_text_color(MUT_R, MUT_G, MUT_B)
+        pdf.set_x(10 + indent)
+        pdf.cell(58, 6, label.upper(), ln=False)
+        pdf.set_font("Helvetica", "", 9)
+        pdf.set_text_color(TEXT_R, TEXT_G, TEXT_B)
+        pdf.multi_cell(0, 6, str(value))
+
+    def divider(pdf):
+        pdf.set_draw_color(LINE_R, LINE_G, LINE_B)
+        pdf.set_line_width(0.2)
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(3)
+
+    pdf = PDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_fill_color(BG_R, BG_G, BG_B)
+    pdf.rect(0, 0, 210, 297, "F")
+
+    # ── KPI Summary ──
+    kpi_s = rpt.get("sections",{}).get("kpi_summary",{})
+    section_title(pdf, "1. KPI SUMMARY")
+    for k, v in kpi_s.items():
+        row(pdf, k.replace("_"," "), v)
+    divider(pdf)
+
+    # ── Peak Severity ──
+    ps = rpt.get("sections",{}).get("peak_severity",{})
+    section_title(pdf, "2. PEAK SEVERITY")
+    row(pdf, "Severity Level",  ps.get("level","—"))
+    row(pdf, "Peak Net Demand", str(ps.get("peak_net_mw","—"))+" MW")
+    row(pdf, "Peak Time",       ps.get("peak_time","—"))
+    divider(pdf)
+
+    # ── Zone Forecasts ──
+    section_title(pdf, "3. ZONE FORECASTS (24-HOUR)")
+    zf = rpt.get("sections",{}).get("zone_forecasts",{})
+    for zone, zv in zf.items():
+        row(pdf, zone, f"Peak {zv.get('peak_mw','—')} MW  ·  Peak Hour H+{zv.get('peak_hour','—')}")
+    divider(pdf)
+
+    # ── Solar Load Match ──
+    sm = rpt.get("sections",{}).get("solar_load_match",{})
+    section_title(pdf, "4. SOLAR-LOAD MATCHING")
+    row(pdf, "Match %",        str(sm.get("match_pct","—"))+"%")
+    row(pdf, "Label",          sm.get("label","—"))
+    row(pdf, "Daytime Solar",  str(sm.get("daytime_solar_mw","—"))+" MW·h")
+    row(pdf, "Daytime Demand", str(sm.get("daytime_demand_mw","—"))+" MW·h")
+    divider(pdf)
+
+    # ── Recommendations ──
+    recs = rpt.get("sections",{}).get("recommendations",[])
+    section_title(pdf, "5. RECOMMENDATIONS")
+    if recs:
+        for i, rec in enumerate(recs, 1):
+            pdf.set_font("Helvetica", "B", 9)
+            pdf.set_text_color(BLUE_R, BLUE_G, BLUE_B)
+            pdf.set_x(10)
+            pdf.cell(0, 6,
+                     f"{i}. [{rec.get('category','General')}]  Priority {rec.get('priority','?')}",
+                     ln=True)
+            pdf.set_font("Helvetica", "", 9)
+            pdf.set_text_color(TEXT_R, TEXT_G, TEXT_B)
+            pdf.set_x(16)
+            pdf.multi_cell(0, 5, rec.get("action",""))
+            pdf.set_font("Helvetica", "I", 8)
+            pdf.set_text_color(MUT_R, MUT_G, MUT_B)
+            pdf.set_x(16)
+            pdf.multi_cell(0, 5, "Why: " + rec.get("reason",""))
+            pdf.ln(1)
+    else:
+        row(pdf, "Status", "No recommendations for current conditions.")
+    divider(pdf)
+
+    # ── Anomalies ──
+    anoms = rpt.get("sections",{}).get("anomalies",[])
+    section_title(pdf, "6. ANOMALY ALERTS")
+    if anoms:
+        for a in anoms[:8]:
+            row(pdf, a.get("zone","—"),
+                f"{a.get('observed_load_mw','—')} MW  |  Score: {a.get('anomaly_score','—')}  |  {a.get('status','—')}")
+    else:
+        row(pdf, "Status", "No anomalies detected.")
+    divider(pdf)
+
+    # ── Model Comparison ──
+    mc = rpt.get("sections",{}).get("model_comparison",[])
+    section_title(pdf, "7. MODEL COMPARISON (TEST-SET METRICS)")
+    for r2 in mc:
+        if r2.get("MAE") is not None:
+            row(pdf, f"{r2.get('zone')} / {r2.get('model')}",
+                f"MAE={r2.get('MAE')}  RMSE={r2.get('RMSE')}  R²={r2.get('R2')}")
+    divider(pdf)
+
+    # ── Simulation (if present) ──
+    sim_s = rpt.get("sections",{}).get("simulation",{})
+    if sim_s.get("baseline_peak_mw"):
+        section_title(pdf, "8. WHAT-IF SIMULATION RESULTS")
+        row(pdf, "Baseline Peak",    str(sim_s.get("baseline_peak_mw","—"))+" MW")
+        row(pdf, "Simulated Peak",   str(sim_s.get("simulated_peak_mw","—"))+" MW")
+        row(pdf, "Peak Reduction",   str(sim_s.get("peak_reduction_mw","—"))+" MW")
+        row(pdf, "Reduction %",      str(sim_s.get("peak_reduction_pct","—"))+"%")
+        row(pdf, "Recommendation",   sim_s.get("recommended","—"))
+        inps = sim_s.get("scenario_inputs",{})
+        for k, v in inps.items():
+            row(pdf, k.replace("_"," "), str(v)+"%", indent=10)
+        divider(pdf)
+
+    # ── Disclaimer ──
+    pdf.set_font("Helvetica", "I", 8)
+    pdf.set_text_color(MUT_R, MUT_G, MUT_B)
+    pdf.set_x(10)
+    pdf.multi_cell(0, 5,
+        "DISCLAIMER: This report is generated from synthetic/demo data representative of "
+        "Indian power distribution contexts. It is NOT real operational data and does not "
+        "represent any actual power utility's data or operations. For academic use only.")
+
+    return bytes(pdf.output())
+
+
 with tabs[8]:
     section_header("Decision Support Report",
-                   "Generate and download a complete JSON report")
+                   "Generate and download a styled PDF report")
 
     cr1, cr2 = st.columns(2)
     with cr1:
         inc_sim = st.checkbox("Include latest simulation results", value=True)
     with cr2:
-        if st.button("📄  Generate Report", type="primary"):
+        if st.button("📄  Generate PDF Report", type="primary"):
             report = {
                 "report_type":  "PowerAI Decision Support Report",
                 "generated_at": datetime.utcnow().isoformat(),
@@ -883,9 +1053,9 @@ with tabs[8]:
                     "forecast_24h":   {"total_demand": total_demand,
                                        "solar": solar_24h, "net_demand": net_demand,
                                        "timestamps": ts_list, "confidence": fc_conf},
-                    "zone_forecasts": {z:{"peak_mw":fc.get("peak_mw"),
-                                          "peak_hour":fc.get("peak_hour_offset")}
-                                       for z,fc in zone_fc.items()},
+                    "zone_forecasts": {z: {"peak_mw": fc.get("peak_mw"),
+                                           "peak_hour": fc.get("peak_hour_offset")}
+                                       for z, fc in zone_fc.items()},
                     "solar_load_match": solar_match,
                     "peak_severity":  {"level": peak_sev.get("severity",{}).get("level"),
                                        "peak_net_mw": peak_sev.get("peak_net_demand_mw"),
@@ -913,15 +1083,40 @@ with tabs[8]:
                     "note":"No simulation run. Use the What-If Simulator tab first."
                 }
             st.session_state["report"] = report
-            st.success("✓ Report generated!")
+            try:
+                pdf_bytes = build_pdf(report)
+                st.session_state["report_pdf"] = pdf_bytes
+                st.success("✓ PDF report generated!")
+            except Exception as e:
+                st.error("PDF generation failed: " + str(e))
 
-    if "report" in st.session_state:
-        rpt  = st.session_state["report"]
-        rjson= json.dumps(rpt, indent=2, default=str)
+    if "report_pdf" in st.session_state:
         st.download_button(
-            label="⬇  Download Report (JSON)",
-            data=rjson,
-            file_name="powerai-report-"+datetime.now().strftime("%Y-%m-%d")+".json",
-            mime="application/json",
+            label="⬇  Download Report (PDF)",
+            data=st.session_state["report_pdf"],
+            file_name="powerai-report-" + datetime.now().strftime("%Y-%m-%d") + ".pdf",
+            mime="application/pdf",
         )
-        st.json(rpt)
+
+    # Preview key sections on screen
+    if "report" in st.session_state:
+        rpt = st.session_state["report"]
+        st.divider()
+        section_header("Report Preview")
+        p1, p2 = st.columns(2)
+        with p1:
+            section_header("KPI Summary")
+            for k, v in rpt.get("sections",{}).get("kpi_summary",{}).items():
+                st.markdown(f"**{k.replace('_',' ').title()}:** {v}")
+            section_header("Peak Severity")
+            ps = rpt.get("sections",{}).get("peak_severity",{})
+            st.markdown(f"**Level:** {ps.get('level','—')}")
+            st.markdown(f"**Peak Net:** {ps.get('peak_net_mw','—')} MW")
+            st.markdown(f"**Time:** {ps.get('peak_time','—')}")
+        with p2:
+            section_header("Zone Forecasts")
+            for zone, zv in rpt.get("sections",{}).get("zone_forecasts",{}).items():
+                st.markdown(f"**{zone}:** Peak {zv.get('peak_mw','—')} MW at H+{zv.get('peak_hour','—')}")
+            section_header("Solar-Load Match")
+            sm2 = rpt.get("sections",{}).get("solar_load_match",{})
+            st.markdown(f"**Match:** {sm2.get('match_pct','—')}% — {sm2.get('label','—')}")
