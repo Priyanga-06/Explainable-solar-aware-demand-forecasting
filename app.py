@@ -1032,7 +1032,11 @@ def build_pdf(rpt: dict) -> bytes:
         "Indian power distribution contexts. It is NOT real operational data and does not "
         "represent any actual power utility's data or operations. For academic use only.")
 
-    return bytes(pdf.output())
+    import io
+    buf = io.BytesIO()
+    buf.write(pdf.output())
+    buf.seek(0)
+    return buf.getvalue()
 
 
 with tabs[8]:
@@ -1093,9 +1097,10 @@ with tabs[8]:
     if "report_pdf" in st.session_state:
         st.download_button(
             label="⬇  Download Report (PDF)",
-            data=st.session_state["report_pdf"],
+            data=bytes(st.session_state["report_pdf"]),
             file_name="powerai-report-" + datetime.now().strftime("%Y-%m-%d") + ".pdf",
             mime="application/pdf",
+            use_container_width=True,
         )
 
     # Preview key sections on screen
