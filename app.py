@@ -31,34 +31,102 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Custom CSS for dark theme
+# ─── Global CSS ────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    .stApp { background-color: #0d1117; }
-    .main .block-container { padding-top: 1rem; max-width: 1400px; }
-    h1, h2, h3 { color: #e6edf3 !important; }
-    .stMetric { background-color: #1c2433; border-radius: 8px; padding: 12px;
-                border: 1px solid #30363d; border-left: 3px solid #58a6ff; }
-    .stMetric label { color: #6e7681; font-size: 0.75rem; text-transform: uppercase;
-                     letter-spacing: 0.05em; }
-    .stMetric value { color: #e6edf3; font-weight: 700; }
-    [data-testid="stSidebar"] { background-color: #161b22; }
-    .stTabs [data-baseweb="tab-list"] { gap: 8px; }
-    .stTabs [data-baseweb="tab"] {
-        background-color: #1c2433; border-radius: 6px 6px 0 0;
-        padding: 8px 16px; color: #8b949e;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #58a6ff22 !important; color: #58a6ff !important;
-    }
-    .sim-warning {
-        background: rgba(188,140,255,0.08); border: 1px solid rgba(188,140,255,0.3);
-        border-radius: 8px; padding: 10px 14px; color: #bc8cff;
-    }
-    .data-note {
-        background: rgba(88,166,255,0.06); border: 1px solid rgba(88,166,255,0.2);
-        border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; color: #8b949e;
-    }
+/* ── Base layout ─────────────────────────────────────────── */
+.stApp                          { background-color: #0d1117; color: #e6edf3; }
+.main .block-container          { padding-top: 0.75rem; max-width: 1440px;
+                                  padding-left: 1.5rem; padding-right: 1.5rem; }
+
+/* ── Global text ─────────────────────────────────────────── */
+h1, h2, h3, h4                  { color: #e6edf3 !important; font-weight: 700 !important; }
+p, li, span, label              { color: #c9d1d9; }
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+[data-testid="stSidebar"]                       { background-color: #161b22 !important; }
+[data-testid="stSidebar"] *                     { color: #c9d1d9 !important; }
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] strong { color: #e6edf3 !important; }
+
+/* ── TAB NAV — fix invisible text ───────────────────────── */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 4px;
+    background: #161b22;
+    border-radius: 10px;
+    padding: 4px 6px;
+    border: 1px solid #21262d;
+}
+.stTabs [data-baseweb="tab"] {
+    background: transparent !important;
+    border-radius: 7px !important;
+    padding: 7px 14px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    color: #8b949e !important;
+    border: none !important;
+    transition: all 0.2s ease;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    background: #21262d !important;
+    color: #c9d1d9 !important;
+}
+.stTabs [aria-selected="true"] {
+    background: linear-gradient(135deg, #1f3a5f, #0d2137) !important;
+    color: #58a6ff !important;
+    border: 1px solid #30363d !important;
+    box-shadow: 0 2px 8px rgba(88,166,255,0.15) !important;
+}
+/* ensure tab text never goes invisible */
+.stTabs [data-baseweb="tab"] p,
+.stTabs [data-baseweb="tab"] span,
+.stTabs [data-baseweb="tab"] div { color: inherit !important; }
+
+/* ── Metrics ─────────────────────────────────────────────── */
+[data-testid="stMetric"]        { background:#1c2433; border-radius:8px;
+                                  border:1px solid #30363d;
+                                  border-left:3px solid #58a6ff; padding:12px; }
+[data-testid="stMetricLabel"]   { color:#8b949e !important; font-size:0.72rem !important;
+                                  text-transform:uppercase; letter-spacing:0.05em; }
+[data-testid="stMetricValue"]   { color:#e6edf3 !important; font-weight:700 !important; }
+
+/* ── Dataframes ──────────────────────────────────────────── */
+[data-testid="stDataFrame"]     { border:1px solid #30363d; border-radius:8px; }
+.dvn-scroller                   { background:#0d1117 !important; }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.stButton > button              { background:#21262d; color:#c9d1d9;
+                                  border:1px solid #30363d; border-radius:6px;
+                                  font-weight:600; }
+.stButton > button:hover        { background:#30363d; color:#e6edf3; }
+[data-testid="baseButton-primary"]  { background: linear-gradient(135deg,#1f6feb,#388bfd) !important;
+                                      color:#fff !important; border:none !important;
+                                      font-weight:700 !important; }
+
+/* ── Selectbox / slider labels ───────────────────────────── */
+.stSelectbox label, .stSlider label { color:#c9d1d9 !important; font-weight:600; }
+
+/* ── Divider ─────────────────────────────────────────────── */
+hr { border-color: #21262d !important; }
+
+/* ── Info / warning / success boxes ─────────────────────── */
+[data-testid="stAlert"]         { border-radius:8px; }
+
+/* ── Simulation warning banner ───────────────────────────── */
+.sim-warning {
+    background: rgba(188,140,255,0.08);
+    border: 1px solid rgba(188,140,255,0.35);
+    border-left: 4px solid #bc8cff;
+    border-radius: 8px; padding: 12px 16px; color: #bc8cff;
+    font-weight: 600;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar              { width:6px; height:6px; }
+::-webkit-scrollbar-track        { background:#0d1117; }
+::-webkit-scrollbar-thumb        { background:#30363d; border-radius:3px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -167,8 +235,16 @@ def chart_config():
 
 # ─── Sidebar ────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.markdown("### ⚡ PowerAI Dashboard")
-    st.caption("Solar-Aware Decision Support System")
+    st.markdown(
+        "<div style='padding:16px 0 8px 0;'>"
+        "<div style='font-size:1.25rem;font-weight:800;color:#e6edf3;"
+        "letter-spacing:-0.01em;'>⚡ PowerAI</div>"
+        "<div style='font-size:0.72rem;color:#8b949e;margin-top:2px;"
+        "font-weight:500;text-transform:uppercase;letter-spacing:0.06em;'>"
+        "Solar-Aware Decision Support</div>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
     st.divider()
 
     st.markdown("**Data Source:**")
@@ -223,9 +299,15 @@ hours = [t.split(" ")[1] if " " in t else t for t in ts_list]
 
 # ─── Navigation tabs ────────────────────────────────────────────────────────
 tab_names = [
-    "📊 Dashboard", "🗺️ Zone Forecast", "☀️ Solar",
-    "⚠️ Anomalies", "📈 Analytics", "💡 Recommendations",
-    "⚖️ Model Comparison", "🔬 What-If Simulator", "📄 Reports",
+    "📊  Dashboard",
+    "🗺️  Zone Forecast",
+    "☀️  Solar",
+    "⚠️  Anomalies",
+    "📈  Analytics",
+    "💡  Recommendations",
+    "⚖️  Model Comparison",
+    "🔬  What-If Simulator",
+    "📄  Reports",
 ]
 tabs = st.tabs(tab_names)
 
@@ -234,12 +316,34 @@ tabs = st.tabs(tab_names)
 # TAB 1: DASHBOARD
 # ═══════════════════════════════════════════════════════════════════════════
 with tabs[0]:
-    st.markdown("## Officer Dashboard")
+    # ── Hero header ──────────────────────────────────────────────────────────
     st.markdown(
-        f"<span style='font-size:0.8rem;color:{C_MUTED}'>"
-        f"Zone-wise demand forecasting &amp; grid health monitoring — "
-        f"Severity: </span>"
-        f"<span style='color:{sev_color};font-weight:700'>{severity_level}</span>",
+        f"""
+        <div style='background:linear-gradient(135deg,#0d1f33 0%,#0d1117 100%);
+                    border:1px solid #21262d; border-left:4px solid #58a6ff;
+                    border-radius:12px; padding:20px 28px; margin-bottom:20px;
+                    display:flex; align-items:center; justify-content:space-between;
+                    flex-wrap:wrap; gap:12px;'>
+          <div>
+            <div style='font-size:1.7rem; font-weight:800; color:#e6edf3;
+                        letter-spacing:-0.02em; line-height:1.2;'>
+              ⚡ Solar-Aware Power Grid Dashboard
+            </div>
+            <div style='font-size:0.85rem; color:#8b949e; margin-top:4px;'>
+              Zone-wise demand forecasting &amp; grid health monitoring
+              &nbsp;·&nbsp; Synthetic / demo data &nbsp;·&nbsp; Indian power distribution context
+            </div>
+          </div>
+          <div style='background:{C_CARD}; border:1px solid #30363d;
+                      border-left:3px solid {sev_color}; border-radius:8px;
+                      padding:10px 18px; text-align:center;'>
+            <div style='font-size:0.65rem; color:{C_MUTED}; text-transform:uppercase;
+                        letter-spacing:0.08em; font-weight:700;'>Grid Status</div>
+            <div style='font-size:1.4rem; font-weight:800; color:{sev_color};
+                        line-height:1.2;'>{severity_level}</div>
+          </div>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
 
