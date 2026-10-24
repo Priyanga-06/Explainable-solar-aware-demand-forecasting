@@ -274,9 +274,32 @@ with tabs[0]:
     # Peak marker
     peak_idx = peak_sev.get("peak_hour_index")
     if peak_idx is not None and peak_idx < len(hours):
-        fig.add_vline(x=hours[peak_idx], line_dash="dash",
-                       line_color=COLORS["Critical"],
-                       annotation_text="PEAK", annotation_font_color=COLORS["Critical"])
+        try:
+            fig.add_vline(
+                x=hours[peak_idx],
+                line_dash="dash",
+                line_color=COLORS["Critical"],
+                annotation=dict(
+                    text="PEAK",
+                    font=dict(color=COLORS["Critical"]),
+                ),
+            )
+        except Exception:
+            # Fallback: add shape + annotation separately (compatible with all Plotly 5.x)
+            fig.add_shape(
+                type="line",
+                x0=hours[peak_idx], x1=hours[peak_idx],
+                y0=0, y1=1,
+                xref="x", yref="paper",
+                line=dict(color=COLORS["Critical"], dash="dash", width=1),
+            )
+            fig.add_annotation(
+                x=hours[peak_idx], y=1,
+                xref="x", yref="paper",
+                text="PEAK",
+                font=dict(color=COLORS["Critical"]),
+                showarrow=False,
+            )
 
     fig.update_layout(**chart_config(), height=300)
     st.plotly_chart(fig, use_container_width=True)
